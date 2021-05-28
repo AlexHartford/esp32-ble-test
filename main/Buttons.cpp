@@ -21,8 +21,6 @@ void ButtonsX::readButtons()
     // look for state change
     // record the time
     // debounce and short/long press based on that info
-      
-    debugPrintln("button loop");
 
     //NOTE: button logic is flipped. since pulled up, LOW is active, etc.
     bool read1 = gpio_get_level(but1);  //low is pressed
@@ -319,7 +317,7 @@ void ButtonsX::verifyButtons()
 }
 
 std::string ButtonsX::getEvents(){
-    debugPrintln("getButtons:   ... ");
+    //debugPrintln("getButtons:   ... ");
     char temp[5];//={};
     //std::string t ="";
     if(uxQueueMessagesWaiting(buttonQueue)){

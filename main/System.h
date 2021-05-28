@@ -7,7 +7,7 @@
 //#include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
-//#include "mySPIFFS.h"
+#include "mySPIFFS.h"
 //#include "display.h"
 #include "main.h"
 
@@ -26,7 +26,7 @@ public:
         //this->weight = new WeightX();
 
         // this->wifiInfo = availableWiFiInfo();
-        // this->wifiInfo = getActiveWifiInfo();
+        this->wifiInfo = getActiveWifiInfo();
 
         
     }
