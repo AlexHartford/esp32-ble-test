@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "debug.h"
 //#include "Weight.h"
-//#include "Buttons.h"
+#include "Buttons.h"
 #include "IOTComms.h"
 //#include "mySPIFFS.h"
 //#include "display.h"
@@ -22,7 +22,7 @@ public:
     SystemX(Device _device) : device{_device}
     {
         //this->display = new DisplayX(); // constructor
-        //this->buttons = new ButtonsX(true);
+        this->buttons = new ButtonsX(true);
         //this->weight = new WeightX();
 
         // this->wifiInfo = availableWiFiInfo();
@@ -134,7 +134,7 @@ public:
 
 
     // DisplayX *display; 
-    //ButtonsX *buttons; 
+    ButtonsX *buttons; 
     //WeightX *weight;
     
 

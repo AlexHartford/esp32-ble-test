@@ -2,7 +2,7 @@
 #include "globals.h"
 #include "debug.h"
 // #include "Weight.h"
-// #include "Buttons.h"
+#include "Buttons.h"
 #include "IOTComms.h"
 // #include "display.h"
 #include "System.h"
