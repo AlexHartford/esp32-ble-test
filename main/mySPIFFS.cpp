@@ -12,7 +12,7 @@
 #include "myWiFi.h"
 #include "globals.h"
 #include "debug.h"
-//#include "Eigen/Dense"
+#include "Eigen/Dense"
 
 //static bool spiffs_init_flag = false;
 esp_vfs_spiffs_conf_t conf;
@@ -367,122 +367,122 @@ WiFiStruct availableWiFiInfo(){
 
 }
 
-// bool getStrainGaugeParams(const Eigen::Matrix3d& m0, const Eigen::Matrix3d& m1, const Eigen::Matrix3d& m2, const Eigen::Matrix3d& m3){
-//     // if file exists and am able to open...
-//     Eigen::Matrix3d m[4] = {const_cast<Eigen::Matrix3d&>(m0), const_cast<Eigen::Matrix3d&>(m1), const_cast<Eigen::Matrix3d&>(m2), const_cast<Eigen::Matrix3d&>(m3)};
-//     debugPrintln("getStrainGaugeParams");
-//     if(!esp_spiffs_mounted(conf.partition_label)){
-//         conf = {
-//         .base_path = "/spiffs",
-//         .partition_label = NULL,
-//         .max_files = 5,
-//         .format_if_mount_failed = true
-//         };
-//         ret = esp_vfs_spiffs_register(&conf);
+bool getStrainGaugeParams(const Eigen::Matrix3d& m0, const Eigen::Matrix3d& m1, const Eigen::Matrix3d& m2, const Eigen::Matrix3d& m3){
+    // if file exists and am able to open...
+    Eigen::Matrix3d m[4] = {const_cast<Eigen::Matrix3d&>(m0), const_cast<Eigen::Matrix3d&>(m1), const_cast<Eigen::Matrix3d&>(m2), const_cast<Eigen::Matrix3d&>(m3)};
+    debugPrintln("getStrainGaugeParams");
+    if(!esp_spiffs_mounted(conf.partition_label)){
+        conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true
+        };
+        ret = esp_vfs_spiffs_register(&conf);
         
-//         if (ret != ESP_OK) {
-//             if (ret == ESP_FAIL) {
-//                 debugPrintln("Failed to mount or format filesystem");
-//             } else if (ret == ESP_ERR_NOT_FOUND) {
-//                 debugPrintln("Failed to find SPIFFS partition");
-//             } else if (ret == ESP_ERR_NOT_FOUND) {
-//                 debugPrintln("Failed to find SPIFFS partition");
-//             } else {
-//                 debugPrint("Failed to initialize SPIFFS (");
-//                 debugPrint(ret);
-//                 debugPrint(")");
-//             }
-//             return false;
-//         }
-//         size_t total = 0, used = 0;
-//         ret = esp_spiffs_info(conf.partition_label, &total, &used);
+        if (ret != ESP_OK) {
+            if (ret == ESP_FAIL) {
+                debugPrintln("Failed to mount or format filesystem");
+            } else if (ret == ESP_ERR_NOT_FOUND) {
+                debugPrintln("Failed to find SPIFFS partition");
+            } else if (ret == ESP_ERR_NOT_FOUND) {
+                debugPrintln("Failed to find SPIFFS partition");
+            } else {
+                debugPrint("Failed to initialize SPIFFS (");
+                debugPrint(ret);
+                debugPrint(")");
+            }
+            return false;
+        }
+        size_t total = 0, used = 0;
+        ret = esp_spiffs_info(conf.partition_label, &total, &used);
         
-//         if (ret != ESP_OK) {
-//             printf( "Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
-//         } else {
-//             printf("Partition size: total: %d, used: %d", total, used);
-//         }
-//     }
-//     debugPrintln("Opening file");
-//     FILE* f = fopen("/spiffs/calib.txt", "r"); 
-//     if (f == NULL) {
-//         debugPrintln("Failed to open file for reading");
-//         return false;
-//         //f = fopen("/spiffs/calib.txt", "w");
-//         //if(f == NULL)
-//         //{
-//         //    return false;
-//         //}
-//         //fprintf(f, ",,,\n");
-//         //fclose(f);
-//         //f = fopen("/spiffs/calib.txt", "r");
-//     }
+        if (ret != ESP_OK) {
+            printf( "Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+        } else {
+            printf("Partition size: total: %d, used: %d", total, used);
+        }
+    }
+    debugPrintln("Opening file");
+    FILE* f = fopen("/spiffs/calib.txt", "r"); 
+    if (f == NULL) {
+        debugPrintln("Failed to open file for reading");
+        return false;
+        //f = fopen("/spiffs/calib.txt", "w");
+        //if(f == NULL)
+        //{
+        //    return false;
+        //}
+        //fprintf(f, ",,,\n");
+        //fclose(f);
+        //f = fopen("/spiffs/calib.txt", "r");
+    }
     
-//     char line[100];
-//     for(int i = 0; i < 4; i++){ // document line corresponding to one matrix
+    char line[100];
+    for(int i = 0; i < 4; i++){ // document line corresponding to one matrix
         
-//         for(int row = 0; row < 3; row++){
-//             for(int col = 0; col < 3; col++){
-//                 fgets(line, sizeof(line), f);
-//                 m[i](row,col) = std::stod(strtok(line, ","));
-//                 //printf("at matrix population %d %d row \n", row, col);
-//             }
+        for(int row = 0; row < 3; row++){
+            for(int col = 0; col < 3; col++){
+                fgets(line, sizeof(line), f);
+                m[i](row,col) = std::stod(strtok(line, ","));
+                //printf("at matrix population %d %d row \n", row, col);
+            }
             
-//         }
+        }
         
-//     }
-//     fclose(f);
-//     debugPrintln("Closing SPIFFS file");
-//     return true;
-// }
+    }
+    fclose(f);
+    debugPrintln("Closing SPIFFS file");
+    return true;
+}
 
-// bool saveStrainGaugeParams(Eigen::Matrix3d *m0, Eigen::Matrix3d *m1, Eigen::Matrix3d *m2,Eigen::Matrix3d *m3){
-//     // if file exists and am able to open...
-//     Eigen::Matrix3d* m[4] = {m0, m1, m2, m3};
-//     debugPrintln("saveStrainGaugeParams");
-//     if(!esp_spiffs_mounted(conf.partition_label)){
-//         conf = {
-//         .base_path = "/spiffs",
-//         .partition_label = NULL,
-//         .max_files = 5,
-//         .format_if_mount_failed = true
-//         };
-//         ret = esp_vfs_spiffs_register(&conf);
-//         if (ret != ESP_OK) {
-//             if (ret == ESP_FAIL) {
-//                 debugPrintln("Failed to mount or format filesystem");
-//             } else if (ret == ESP_ERR_NOT_FOUND) {
-//                 debugPrintln("Failed to find SPIFFS partition");
-//             } else if (ret == ESP_ERR_NOT_FOUND) {
-//                 debugPrintln("Failed to find SPIFFS partition");
-//             } else {
-//                 debugPrint("Failed to initialize SPIFFS (");
-//                 debugPrint(ret);
-//                 debugPrint(")");
-//             }
-//             return false;
-//         }
-//     }
-//     debugPrintln("Opening file");
-//     FILE* f = fopen("/spiffs/calib.txt", "w"); 
-//     if (f == NULL) {
-//         debugPrintln("Failed to open file for reading");
-//         return false;
-//     }
+bool saveStrainGaugeParams(Eigen::Matrix3d *m0, Eigen::Matrix3d *m1, Eigen::Matrix3d *m2,Eigen::Matrix3d *m3){
+    // if file exists and am able to open...
+    Eigen::Matrix3d* m[4] = {m0, m1, m2, m3};
+    debugPrintln("saveStrainGaugeParams");
+    if(!esp_spiffs_mounted(conf.partition_label)){
+        conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true
+        };
+        ret = esp_vfs_spiffs_register(&conf);
+        if (ret != ESP_OK) {
+            if (ret == ESP_FAIL) {
+                debugPrintln("Failed to mount or format filesystem");
+            } else if (ret == ESP_ERR_NOT_FOUND) {
+                debugPrintln("Failed to find SPIFFS partition");
+            } else if (ret == ESP_ERR_NOT_FOUND) {
+                debugPrintln("Failed to find SPIFFS partition");
+            } else {
+                debugPrint("Failed to initialize SPIFFS (");
+                debugPrint(ret);
+                debugPrint(")");
+            }
+            return false;
+        }
+    }
+    debugPrintln("Opening file");
+    FILE* f = fopen("/spiffs/calib.txt", "w"); 
+    if (f == NULL) {
+        debugPrintln("Failed to open file for reading");
+        return false;
+    }
     
-//     for(int i = 0; i < 4; i++){ // document line corresponding to one matrix
-//         //for(int j = 0; j<9; j++){ // single row with all matrix numbers
-//             for(int row = 0; row < 3; row++){
-//                 for(int col = 0; col < 3; col++){
+    for(int i = 0; i < 4; i++){ // document line corresponding to one matrix
+        //for(int j = 0; j<9; j++){ // single row with all matrix numbers
+            for(int row = 0; row < 3; row++){
+                for(int col = 0; col < 3; col++){
                     
-//                     fprintf(f, "%0.5f,", m[i]->coeffRef(row,col));
-//                 }
-//                 fprintf(f, "\n");
-//             }
-//         //}
-//     }
-//     fclose(f);
-//     debugPrintln("Closing spiffs file");
-//     return true;
-// }
+                    fprintf(f, "%0.5f,", m[i]->coeffRef(row,col));
+                }
+                fprintf(f, "\n");
+            }
+        //}
+    }
+    fclose(f);
+    debugPrintln("Closing spiffs file");
+    return true;
+}
 

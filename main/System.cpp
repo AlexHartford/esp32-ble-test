@@ -1,7 +1,7 @@
 #include "a_config.h"
 #include "globals.h"
 #include "debug.h"
-// #include "Weight.h"
+#include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
 // #include "display.h"
@@ -18,7 +18,7 @@ void SystemX::goToSleep(){
     // display->displayLogo();
     // vTaskDelay(100);
     // display->displaySleepPrep();
-    // weight->sleepPreparation();
+    weight->sleepPreparation();
 
     init_ulp_program();
 }
@@ -73,13 +73,13 @@ void SystemX::validateDataAcrossObjects(){
     }
     /******************************************/
     // on units change
-    // if (eUnits != this->weight->getLocalUnits()){
-    //     weight->setLocalUnits(eUnits);
-    // }
+    if (eUnits != this->weight->getLocalUnits()){
+        weight->setLocalUnits(eUnits);
+    }
 
     if( WEIGHTSTREAM == this->getPage()){
         
-        // static std::string current = weight->getWeightStr();
+        static std::string current = weight->getWeightStr();
         // checking if value changes and truncation happen in weight main loop. 
         // If not, it passes -1 which doesn't change the display at all
         //display->displayWeight(current);
@@ -94,7 +94,7 @@ void SystemX::validateDataAcrossObjects(){
 }
 
 void SystemX::runUpdate(){
-    // setPage(pUPDATE);
+    setPage(pUPDATE);
     // this->display->displayUpdateScreen(0);
     // if(setupOTA() == 0){
     //     executeOTA();

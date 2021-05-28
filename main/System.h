@@ -4,7 +4,7 @@
 #include "a_config.h"
 #include "globals.h"
 #include "debug.h"
-//#include "Weight.h"
+#include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
 #include "mySPIFFS.h"
@@ -23,7 +23,7 @@ public:
     {
         //this->display = new DisplayX(); // constructor
         this->buttons = new ButtonsX(true);
-        //this->weight = new WeightX();
+        this->weight = new WeightX();
 
         // this->wifiInfo = availableWiFiInfo();
         this->wifiInfo = getActiveWifiInfo();
@@ -59,7 +59,7 @@ public:
     }
     void setBattery(int b){
         if(b > 100){
-            debugPrintln("Battery over 100% ??????");
+            debugPrintln("Battery over 100% ?????? - might be charging");
             b = 100;
         }else if(b < 0){
             debugPrintln("Battery less than 0% ???????");
@@ -135,7 +135,7 @@ public:
 
     // DisplayX *display; 
     ButtonsX *buttons; 
-    //WeightX *weight;
+    WeightX *weight;
     
 
 private:

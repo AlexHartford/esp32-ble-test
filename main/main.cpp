@@ -29,7 +29,7 @@ extern "C" {void app_main(void);}
     nvs_open_from_partition("fctry", "fctryNamespace",  
                 NVS_READWRITE, &fctry_handle);
     nvs_get_str(fctry_handle, "serial_no", ret.SN, &buflen);
-    //strcpy(ret.SN, buf);
+    
 
 debugPrintln("pop data2");
     const esp_partition_t *running = esp_ota_get_running_partition();
