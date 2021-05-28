@@ -170,10 +170,10 @@ void ota_task(void *pvParameter)
 ota_end:
     ota_finish_err = esp_https_ota_finish(https_ota_handle);
     if ((err == ESP_OK) && (ota_finish_err == ESP_OK)) {
-        //_sys->display->displayLogo();
+        _sys->display->displayLogo();
         debugPrintln("ESP_HTTPS_OTA upgrade successful. Rebooting ...");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-        //_sys->display->displayOff();
+        _sys->display->displayOff();
         esp_restart();
     } else {
         if (ota_finish_err == ESP_ERR_OTA_VALIDATE_FAILED) {

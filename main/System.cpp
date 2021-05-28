@@ -4,7 +4,7 @@
 #include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
-// #include "display.h"
+#include "display.h"
 #include "System.h"
 #include "main.h"
 #include "myOTA.h"
@@ -15,9 +15,9 @@
 
 void SystemX::goToSleep(){
 
-    // display->displayLogo();
-    // vTaskDelay(100);
-    // display->displaySleepPrep();
+    display->displayLogo();
+    vTaskDelay(100);
+    display->displaySleepPrep();
     weight->sleepPreparation();
 
     init_ulp_program();
@@ -82,7 +82,7 @@ void SystemX::validateDataAcrossObjects(){
         static std::string current = weight->getWeightStr();
         // checking if value changes and truncation happen in weight main loop. 
         // If not, it passes -1 which doesn't change the display at all
-        //display->displayWeight(current);
+        display->displayWeight(current);
         // bluetooth value is also updated from weight loop
     
         
@@ -95,7 +95,7 @@ void SystemX::validateDataAcrossObjects(){
 
 void SystemX::runUpdate(){
     setPage(pUPDATE);
-    //this->display->displayUpdateScreen(0);
+    this->display->displayUpdateScreen(0);
     if(setupOTA() == 0){
         executeOTA();
     }

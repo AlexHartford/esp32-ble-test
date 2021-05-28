@@ -8,7 +8,7 @@
 #include "Buttons.h"
 #include "IOTComms.h"
 #include "mySPIFFS.h"
-//#include "display.h"
+#include "display.h"
 #include "main.h"
 
 #include "nvs.h"
@@ -21,7 +21,7 @@ class SystemX
 public: 
     SystemX(Device _device) : device{_device}
     {
-        //this->display = new DisplayX(); // constructor
+        this->display = new DisplayX(); // constructor
         this->buttons = new ButtonsX(true);
         this->weight = new WeightX();
 
@@ -133,7 +133,7 @@ public:
     bool callbackFlag = true;
 
 
-    // DisplayX *display; 
+    DisplayX *display; 
     ButtonsX *buttons; 
     WeightX *weight;
     
