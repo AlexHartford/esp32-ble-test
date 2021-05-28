@@ -7,7 +7,7 @@
 // #include "display.h"
 #include "System.h"
 #include "main.h"
-// #include "myOTA.h"
+#include "myOTA.h"
 
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -95,9 +95,9 @@ void SystemX::validateDataAcrossObjects(){
 
 void SystemX::runUpdate(){
     setPage(pUPDATE);
-    // this->display->displayUpdateScreen(0);
-    // if(setupOTA() == 0){
-    //     executeOTA();
-    // }
+    //this->display->displayUpdateScreen(0);
+    if(setupOTA() == 0){
+        executeOTA();
+    }
 }
 
