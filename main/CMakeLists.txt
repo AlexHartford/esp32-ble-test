@@ -1,9 +1,9 @@
 FILE(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/main/*.*)
 
 idf_component_register(SRCS "main.cpp" ${app_sources} 
-                            INCLUDE_DIRS "" "../components/lvgl" "../components/lvgl_esp32_drivers" "../components/esp-nimble-cpp"
-                            REQUIRES soc nvs_flash ulp spiffs esp_adc_cal bt esp_https_ota app_update )
-                            
+                            INCLUDE_DIRS "" "../components/esp-nimble-cpp"
+                            REQUIRES bt ulp )
+                            #esp_https_ota app_update esp_adc_cal nvs_flash soc
 
 set( ulp_app_name ulp_main)
 

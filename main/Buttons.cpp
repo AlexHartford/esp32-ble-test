@@ -1,12 +1,12 @@
 #include "Buttons.h"
-#include "a_config.h"
-#include "debug.h"
 
 #include "freertos/FreeRTOS.h"
 #include "driver/gpio.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include <string>
+
+
 
 #define GPIO_INPUT_PIN_SEL ((1ULL<<but1) | (1ULL<<but2) | (1ULL<<but3) | (1ULL<<but4))
 
@@ -129,12 +129,12 @@ void ButtonsX::readButtons()
             button1.shortPress = false;
             button1.executeFlag = true;
             button1.block = true;
-            // debugPrintln("button 1 long press");
+            
         }
         else
         {
             button1.shortPress = true;
-            //debugPrintln("button 1 short");
+            
         }
     }
     else if (button1.buttonStatus == false)
@@ -142,7 +142,7 @@ void ButtonsX::readButtons()
         if (button1.shortPress)
         {
             button1.executeFlag = true;
-            // debugPrintln("button 1 shorty execute");
+            
         }
         if (button1.block)
         {
@@ -158,12 +158,12 @@ void ButtonsX::readButtons()
             button2.shortPress = false;
             button2.executeFlag = true;
             button2.block = true;
-            // debugPrintln("button 2 long press");
+            
         }
         else
         {
             button2.shortPress = true;
-            //debugPrintln("button 2 short");
+            
         }
     }
     else if (button2.buttonStatus == false)
@@ -171,7 +171,7 @@ void ButtonsX::readButtons()
         if (button2.shortPress)
         {
             button2.executeFlag = true;
-            //debugPrintln("button 2 shorty execute");
+            
         }
         if (button2.block)
         {
@@ -187,12 +187,12 @@ void ButtonsX::readButtons()
             button3.shortPress = false;
             button3.executeFlag = true;
             button3.block = true;
-            // debugPrintln("button 3 long press");
+            
         }
         else
         {
             button3.shortPress = true;
-            //debugPrintln("button 3 short");
+            
         }
     }
     else if (button3.buttonStatus == false)
@@ -200,7 +200,7 @@ void ButtonsX::readButtons()
         if (button3.shortPress)
         {
             button3.executeFlag = true;
-            //debugPrintln("button 3 shorty execute");
+            
         }
         if (button3.block)
         {
@@ -216,12 +216,12 @@ void ButtonsX::readButtons()
             button4.shortPress = false;
             button4.executeFlag = true;
             button4.block = true;
-            // debugPrintln("button 4 long press");
+            
         }
         else
         {
             button4.shortPress = true;
-            //debugPrintln("button 4 short");
+            
         }
     }
     else if (button4.buttonStatus == false)
@@ -229,7 +229,7 @@ void ButtonsX::readButtons()
         if (button4.shortPress)
         {
             button4.executeFlag = true;
-            //debugPrintln("button 4 shorty execute");
+           
         }
         if (button4.block)
         {
@@ -243,46 +243,46 @@ void ButtonsX::verifyButtons()
 {
     if (button1.executeFlag || button2.executeFlag || button3.executeFlag || button4.executeFlag)
     {
-        // debugPrintln("Building execute strings");
+        
         if (button1.longPress)
         {
             button1.cmd = 'L';
-            debugPrintln("B1 long");
+            printf("B1 long\n");
             button1.longPress = false;
             button1.executeFlag = false;
         }
         else if (button1.shortPress)
         {
             button1.cmd = 'S';
-            debugPrintln("B1 short");
+            printf("B1 short\n");
             button1.shortPress = false;
             button1.executeFlag = false;
         }
         if (button2.longPress)
         {
             button2.cmd = 'L';
-            debugPrintln("B2 long");
+            printf("B2 long\n");
             button2.longPress = false;
             button2.executeFlag = false;
         }
         else if (button2.shortPress)
         {
             button2.cmd = 'S';
-            debugPrintln("B2 short");
+            printf("B2 short\n");
             button2.shortPress = false;
             button2.executeFlag = false;
         }
         if (button3.longPress)
         {
             button3.cmd = 'L';
-            debugPrintln("B3 long");
+            printf("B3 long\n");
             button3.longPress = false;
             button3.executeFlag = false;
         }
         else if (button3.shortPress)
         {
             button3.cmd = 'S';
-            debugPrintln("B3 short");
+            printf("B3 short\n");
             button3.shortPress = false;
             button3.executeFlag = false;
         }
@@ -290,7 +290,7 @@ void ButtonsX::verifyButtons()
         {
             //
             button4.cmd = 'L';
-            debugPrintln("B4 long");
+            printf("B4 long\n");
             button4.longPress = false;
             button4.executeFlag = false;
         }
@@ -298,16 +298,15 @@ void ButtonsX::verifyButtons()
         {
             //
             button4.cmd = 'S';
-            debugPrintln("B4 short");
+            printf("B4 short\n");
             button4.shortPress = false;
             button4.executeFlag = false;
         }
         char doo[5] = {button1.cmd, button2.cmd, button3.cmd, button4.cmd, '\0'};
-        //char doo[5];
-        //sprintf(doo, "%s%s%s%s", button1.cmd, button2.cmd, button3.cmd, button4.cmd);
+        
         xQueueSend(buttonQueue, &doo, (TickType_t)10);
-        // debugPrintln(doo);
-        // debugPrintln("Buttons added to queue");
+        
+        // printf("Buttons added to queue");
         button1.cmd = 'N';
         button2.cmd = 'N';
         button3.cmd = 'N';
@@ -317,25 +316,20 @@ void ButtonsX::verifyButtons()
 }
 
 std::string ButtonsX::getEvents(){
-    //debugPrintln("getButtons:   ... ");
-    char temp[5];//={};
-    //std::string t ="";
+    
+    char temp[5];
+    
     if(uxQueueMessagesWaiting(buttonQueue)){
-        //vTaskDelay(5);
+       
         xQueueReceive(buttonQueue, &temp, (TickType_t)50);
-        //debugPrintln("Getting buttons from queue");
-        //debugPrintln(temp);
+        //printf("Getting buttons from queue\n");
+        
         std::string t = std::string(temp, sizeof(temp+1));
         return t;
     }
     return std::string("");
 }
 
-void ButtonsX::sleepPreparation() 
-{
-    //vDeleteTask(buttonHandler_TH){}
-    debugPrintln("button inside sleep prep");
-}
 
 void ButtonsX::Main() // loop
 {
@@ -350,9 +344,8 @@ void ButtonsX::Main() // loop
                                  ucQueueStorageArea,
                                  &xStaticQueue); */
     configASSERT(buttonQueue);
-    debugPrintln("Button thread created...");
+    printf("Button thread created...\n");
     if(debounce){
-        debugPrintln("Using Software Debounce");
         debounceCount = 5;
     }else{
         debounceCount = 1;
@@ -365,15 +358,4 @@ void ButtonsX::Main() // loop
         vTaskDelay(3);
     }
 }
-
-// Wrapper Functions to use in C...
-extern "C" int ButX_c_init(){
-    // do something
-    return 1;
-}
-
-extern "C" std::string ButX_c_getEvents(ButtonsX * b){
-    return b->getEvents();
-}
-
 

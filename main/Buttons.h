@@ -1,16 +1,18 @@
 #ifndef BUTTONS_H
 #define BUTTONS_H
 
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
-// #include "freertos/queue.h"
-#include "a_config.h"
-#include "debug.h"
-#include "globals.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #include <string>
 
 #include "driver/gpio.h"
 
+
+#define but1 GPIO_NUM_13
+#define but2 GPIO_NUM_14
+#define but3 GPIO_NUM_19
+#define but4 GPIO_NUM_21
 
 struct Button
 {
@@ -66,7 +68,7 @@ public:
   }
   ~ButtonsX(){} 
   
-  void sleepPreparation();
+  
   std::string getEvents();
   void Main();
 
@@ -84,5 +86,4 @@ private:
   QueueHandle_t buttonQueue;
 };
 
-//extern "C" std::string ButX_c_getEvents(ButtonsX * b);
 #endif

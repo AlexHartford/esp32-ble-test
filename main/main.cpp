@@ -1,41 +1,30 @@
 
-/** NimBLE_Server Demo:
- *
- *  Demonstrates many of the available features of the NimBLE server library.
- *  
- *  Created: on March 22 2020
- *      Author: H2zero
- * 
-*/
 
 
-#include "IOTComms.h"
-#include "globals.h"
-#include "System.h"
+
+#include "BLE.h"
+#include "Buttons.h"
+
 #include <stdio.h>
-//#include "myOTA.h"
 
 #include "driver/gpio.h"
 #include "driver/adc.h"
-#include "esp_adc_cal.h"
 
 #include "esp_sleep.h"
-#include "nvs.h"
-#include "nvs_flash.h"
- #include "soc/rtc_cntl_reg.h"
- #include "soc/sens_reg.h"
- #include "soc/rtc_periph.h"
+// #include "nvs.h"
+// #include "nvs_flash.h"
+#include "soc/rtc_cntl_reg.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_periph.h"
 #include "driver/rtc_io.h"
 
 #include "driver/rtc_io.h"
 
 #include "esp32/ulp.h"
 #include "ulp_main.h"
-#include "esp_app_format.h"
+
 
 extern "C" {void app_main(void);}
-
- SystemX* _sys;
 
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
@@ -105,31 +94,6 @@ void init_ulp_program(){
 }
 
 
- Device populateStartData(){
-    Device ret;
-    //char* buf;
-    size_t buflen = 9;
-    // read NVS flash for SN and stuff...
-    debugPrintln("pop data1");
-    nvs_handle fctry_handle;
-    nvs_flash_init_partition("fctry");
-    nvs_open_from_partition("fctry", "fctryNamespace",  
-                NVS_READWRITE, &fctry_handle);
-    nvs_get_str(fctry_handle, "serial_no", ret.SN, &buflen);
-    
-
-    debugPrintln("pop data2");
-    const esp_partition_t *running = esp_ota_get_running_partition();
-    esp_app_desc_t running_app_info;
-    if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-        debugPrint("Running firmware version: ");
-        debugPrintln(running_app_info.version);
-        strcpy(ret.VER, running_app_info.version);
-    }
-    debugPrintln("pop data3");
-    return ret;
-}
-
 void app_main(void) {
     printf("Starting main\n");
     // change pin modes if it woke up from ULP vs power up
@@ -143,179 +107,30 @@ void app_main(void) {
         ulp_deinit();
     }
 
-    debugSetup();
     BLEsetup();
 
-    _sys = new SystemX(populateStartData());
-    vTaskDelay(300);
 
     std::string event;
-    PAGE page;
-    MODE mode;
+    ButtonsX but(true);
+    vTaskDelay(200);
 
-    int battery=0;
-    uint32_t reading=0;
-    long batTime = esp_timer_get_time()/1000;
 
-    // update progress parameter
-    int q = 0;
-    int q_last = 0;
-
-    // page timeout counters
-    long timeout = 0;
-
-    debugPrintln("Before main loop...");
+    printf("Before main loop...\n");
     for(;;){
-        event = _sys->buttons->getEvents();
-        page = _sys->getPage();
-        mode = _sys->getMode();
+        event = but.getEvents();
+        
         if (!(event.compare("") == 0)) 
-        {
-
-            if (mode == STANDARD)
+        {      
+            printf("%s", event.c_str());
+            if (event.compare(0,4,"LNNN",0,4) == 0)
             {
-                //xSemaphoreTake(pageMutex, (TickType_t)10);
-                if (page == WEIGHTSTREAM)
-                {
-                    //xSemaphoreGive(pageMutex);
-                    if (event.compare(0,4,"SNNN",0,4) == 0)
-                    {
-                        //TODO: TARE FUNCTION
-                        //tare();
-                    }
-                    if (event.compare(0,4,"LNNN",0,4) == 0)
-                    {
-                        //TODO: SHUTDOWN FUNCTION
-                        debugPrintln("sleepy time");
-                        _sys->goToSleep(); 
-                    }
-                    if (event.compare(0,4,"NSNN", 0, 4) == 0)
-                    {
-                        //TODO: Units
-                        
-                        _sys->setPage(UNITS);
-                        //_sys->display->displayUnits()
-                        timeout = esp_timer_get_time()/1000;
-                        
-                    }
-                    if (event.compare(0,4,"NLNN", 0, 4) == 0)
-                    {
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NNSN", 0, 4) == 0)
-                    {
-                        
-                        timeout = esp_timer_get_time()/1000;
-                        
-                    }
-                    if (event.compare(0,4,"NNLN", 0, 4) == 0)
-                    {
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                }
-                else if (page == UNITS)
-                {
-                    // if no button presses while on this page for a few seconds, revert back to displaying the weight
-                    if(esp_timer_get_time()/1000-timeout > 4000){
-                        _sys->setPage(WEIGHTSTREAM);
-                    }
-
-                    if (event.compare(0,4, "SNNN",0,4) == 0)
-                    {
-                        //TODO:  FUNCTION
-                        _sys->setPage(WEIGHTSTREAM);
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4, "LNNN",0,4) == 0)
-                    {
-                        debugPrintln("sleepy time");
-                        _sys->goToSleep(); 
-                    }
-                    if (event.compare(0,4,"NSNN",0,4) == 0)
-                    { 
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NLNN", 0, 4) == 0)
-                    {
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NNSN", 0, 4) == 0)
-                    {
-                        _sys->incrementUnits();
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NNLN", 0, 4) == 0)
-                    {
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NNNS", 0, 4) == 0)
-                    {
-                        _sys->decrementUnits();
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                    if (event.compare(0,4,"NNNL", 0, 4) == 0)
-                    {
-                        timeout = esp_timer_get_time()/1000;
-                    }
-                }else if(page == pUPDATE){
-                    q = 50; //getUpdatePercent(); TODO: include update amount -> delayed for later since giving weird numbers
-                    if (q < 3 && q != q_last)
-                    {
-                    //_sys->display->displayUpdateScreen(3);
-                    q_last = q;
-                    }
-                    else if (q > q_last)
-                    {
-                    //_sys->display->displayUpdateScreen(q);
-                    q_last = q;
-                    }
-                    // TODO: dynamically update percentage when downloading and inistalling updated code
-                    break;
-                }else if(page == SETTINGS){
-                    // something
-                    // #ifdef CONFIG_SB_V1_HALF_ILI9341
-                    // #endif
-                    // #ifdef CONFIG_SB_V3_ST7735S
-                    // #endif
-                    // #ifdef CONFIG_SB_V6_FULL_ILI9341
-                    // #endif
-                }else if(page == INFO){
-                    // device info stuff
-                    //_sys->display->displayDeviceInfo(_sys->getSN(), _sys->getVER());
-                } //else if(page == )
-
-            } else if (mode == CALIBRATION)
-            {
-                /*if(ePage == ){
-           * xSemaphoreGive(pageMutex);
-            if(strcmp(event,"SNNN")){
-          
+                //TODO: SHUTDOWN FUNCTION
+                printf("sleepy time\n");
+                init_ulp_program(); 
             }
-            if(strcmp(event, "LNNN")){
-            }
-            if(strcmp(event, "NSNN")){
-              
-            }
-          }
-          else if(ePage == ){
-            if(strcmp(event,"SNNN")){
-              //TODO:  FUNCTION
-            }
-            if(strcmp(event, "LNNN")){
-              //TODO:  FUNCTION
-            }
-            if(strcmp(event, "NSNN")){
-              //TODO: Units
-              incrementUnits();
-              }
-            }*/
-            }
-
             event = "";
         }
-        vTaskDelay(10); // try reducing this to 10 if bluetooth issues come up again
-    
+        vTaskDelay(20); 
     }
-
 }
     
