@@ -13,7 +13,7 @@
 #include "globals.h"
 #include "System.h"
 #include <stdio.h>
-#include "myOTA.h"
+//#include "myOTA.h"
 
 #include "driver/gpio.h"
 #include "driver/adc.h"
@@ -167,7 +167,154 @@ void app_main(void) {
     debugPrintln("Before main loop...");
     for(;;){
         event = _sys->buttons->getEvents();
-        vTaskDelay(20);
+        page = _sys->getPage();
+        mode = _sys->getMode();
+        if (!(event.compare("") == 0)) 
+        {
+
+            if (mode == STANDARD)
+            {
+                //xSemaphoreTake(pageMutex, (TickType_t)10);
+                if (page == WEIGHTSTREAM)
+                {
+                    //xSemaphoreGive(pageMutex);
+                    if (event.compare(0,4,"SNNN",0,4) == 0)
+                    {
+                        //TODO: TARE FUNCTION
+                        //tare();
+                    }
+                    if (event.compare(0,4,"LNNN",0,4) == 0)
+                    {
+                        //TODO: SHUTDOWN FUNCTION
+                        debugPrintln("sleepy time");
+                        _sys->goToSleep(); 
+                    }
+                    if (event.compare(0,4,"NSNN", 0, 4) == 0)
+                    {
+                        //TODO: Units
+                        
+                        _sys->setPage(UNITS);
+                        //_sys->display->displayUnits()
+                        timeout = esp_timer_get_time()/1000;
+                        
+                    }
+                    if (event.compare(0,4,"NLNN", 0, 4) == 0)
+                    {
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NNSN", 0, 4) == 0)
+                    {
+                        
+                        timeout = esp_timer_get_time()/1000;
+                        
+                    }
+                    if (event.compare(0,4,"NNLN", 0, 4) == 0)
+                    {
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                }
+                else if (page == UNITS)
+                {
+                    // if no button presses while on this page for a few seconds, revert back to displaying the weight
+                    if(esp_timer_get_time()/1000-timeout > 4000){
+                        _sys->setPage(WEIGHTSTREAM);
+                    }
+
+                    if (event.compare(0,4, "SNNN",0,4) == 0)
+                    {
+                        //TODO:  FUNCTION
+                        _sys->setPage(WEIGHTSTREAM);
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4, "LNNN",0,4) == 0)
+                    {
+                        debugPrintln("sleepy time");
+                        _sys->goToSleep(); 
+                    }
+                    if (event.compare(0,4,"NSNN",0,4) == 0)
+                    { 
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NLNN", 0, 4) == 0)
+                    {
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NNSN", 0, 4) == 0)
+                    {
+                        _sys->incrementUnits();
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NNLN", 0, 4) == 0)
+                    {
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NNNS", 0, 4) == 0)
+                    {
+                        _sys->decrementUnits();
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                    if (event.compare(0,4,"NNNL", 0, 4) == 0)
+                    {
+                        timeout = esp_timer_get_time()/1000;
+                    }
+                }else if(page == pUPDATE){
+                    q = 50; //getUpdatePercent(); TODO: include update amount -> delayed for later since giving weird numbers
+                    if (q < 3 && q != q_last)
+                    {
+                    //_sys->display->displayUpdateScreen(3);
+                    q_last = q;
+                    }
+                    else if (q > q_last)
+                    {
+                    //_sys->display->displayUpdateScreen(q);
+                    q_last = q;
+                    }
+                    // TODO: dynamically update percentage when downloading and inistalling updated code
+                    break;
+                }else if(page == SETTINGS){
+                    // something
+                    // #ifdef CONFIG_SB_V1_HALF_ILI9341
+                    // #endif
+                    // #ifdef CONFIG_SB_V3_ST7735S
+                    // #endif
+                    // #ifdef CONFIG_SB_V6_FULL_ILI9341
+                    // #endif
+                }else if(page == INFO){
+                    // device info stuff
+                    //_sys->display->displayDeviceInfo(_sys->getSN(), _sys->getVER());
+                } //else if(page == )
+
+            } else if (mode == CALIBRATION)
+            {
+                /*if(ePage == ){
+           * xSemaphoreGive(pageMutex);
+            if(strcmp(event,"SNNN")){
+          
+            }
+            if(strcmp(event, "LNNN")){
+            }
+            if(strcmp(event, "NSNN")){
+              
+            }
+          }
+          else if(ePage == ){
+            if(strcmp(event,"SNNN")){
+              //TODO:  FUNCTION
+            }
+            if(strcmp(event, "LNNN")){
+              //TODO:  FUNCTION
+            }
+            if(strcmp(event, "NSNN")){
+              //TODO: Units
+              incrementUnits();
+              }
+            }*/
+            }
+
+            event = "";
+        }
+        vTaskDelay(10); // try reducing this to 10 if bluetooth issues come up again
+    
     }
 
 }

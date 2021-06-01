@@ -4,11 +4,11 @@
 #include "a_config.h"
 #include "globals.h"
 #include "debug.h"
-#include "Weight.h"
+//#include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
-#include "mySPIFFS.h"
-#include "display.h"
+//#include "mySPIFFS.h"
+//#include "display.h"
 #include "main.h"
 
 #include "nvs.h"
@@ -21,12 +21,12 @@ class SystemX
 public: 
     SystemX(Device _device) : device{_device}
     {
-        this->display = new DisplayX(); // constructor
+        //this->display = new DisplayX(); // constructor
         this->buttons = new ButtonsX(true);
-        this->weight = new WeightX();
+        //this->weight = new WeightX();
 
         // this->wifiInfo = availableWiFiInfo();
-        this->wifiInfo = getActiveWifiInfo();
+        //this->wifiInfo = getActiveWifiInfo();
 
         
     }
@@ -133,9 +133,9 @@ public:
     bool callbackFlag = true;
 
 
-    DisplayX *display; 
+    //DisplayX *display; 
     ButtonsX *buttons; 
-    WeightX *weight;
+    //WeightX *weight;
     
 
 private:

@@ -1,13 +1,13 @@
 #include "a_config.h"
 #include "globals.h"
 #include "debug.h"
-#include "Weight.h"
+//#include "Weight.h"
 #include "Buttons.h"
 #include "IOTComms.h"
-#include "display.h"
+//#include "display.h"
 #include "System.h"
 #include "main.h"
-#include "myOTA.h"
+//#include "myOTA.h"
 
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -15,10 +15,10 @@
 
 void SystemX::goToSleep(){
 
-    display->displayLogo();
+    //display->displayLogo();
     vTaskDelay(100);
-    display->displaySleepPrep();
-    weight->sleepPreparation();
+    //display->displaySleepPrep();
+    //weight->sleepPreparation();
 
     init_ulp_program();
 }
@@ -73,16 +73,16 @@ void SystemX::validateDataAcrossObjects(){
     }
     /******************************************/
     // on units change
-    if (eUnits != this->weight->getLocalUnits()){
-        weight->setLocalUnits(eUnits);
-    }
+    // if (eUnits != this->weight->getLocalUnits()){
+    //     weight->setLocalUnits(eUnits);
+    // }
 
     if( WEIGHTSTREAM == this->getPage()){
         
-        static std::string current = weight->getWeightStr();
+        //static std::string current = weight->getWeightStr();
         // checking if value changes and truncation happen in weight main loop. 
         // If not, it passes -1 which doesn't change the display at all
-        display->displayWeight(current);
+        //display->displayWeight(current);
         // bluetooth value is also updated from weight loop
     
         
@@ -95,9 +95,9 @@ void SystemX::validateDataAcrossObjects(){
 
 void SystemX::runUpdate(){
     setPage(pUPDATE);
-    this->display->displayUpdateScreen(0);
-    if(setupOTA() == 0){
-        executeOTA();
-    }
+    //this->display->displayUpdateScreen(0);
+    // if(setupOTA() == 0){
+    //     executeOTA();
+    // }
 }
 
