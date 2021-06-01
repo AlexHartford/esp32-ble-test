@@ -1,226 +1,136 @@
 
-/** NimBLE_Server Demo:
- *
- *  Demonstrates many of the available features of the NimBLE server library.
- *  
- *  Created: on March 22 2020
- *      Author: H2zero
- * 
-*/
-#include "esp-nimble-cpp/src/NimBLEDevice.h"
-#include "esp-nimble-cpp/src/NimBLELog.h"
+
+
+
+#include "BLE.h"
+#include "Buttons.h"
 
 #include <stdio.h>
 
+#include "driver/gpio.h"
+#include "driver/adc.h"
+
+#include "esp_sleep.h"
+// #include "nvs.h"
+// #include "nvs_flash.h"
+#include "soc/rtc_cntl_reg.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_periph.h"
+#include "driver/rtc_io.h"
+
+#include "driver/rtc_io.h"
+
+#include "esp32/ulp.h"
+#include "ulp_main.h"
+
+
 extern "C" {void app_main(void);}
 
-static NimBLEServer* pServer;
 
-/**  None of these are required as they will be handled by the library with defaults. **
- **                       Remove as you see fit for your needs                        */  
-class ServerCallbacks: public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* pServer) {
-        printf("Client connected\n");
-        NimBLEDevice::startAdvertising();
-    };
-    /** Alternative onConnect() method to extract details of the connection. 
-     *  See: src/ble_gap.h for the details of the ble_gap_conn_desc struct.
-     */  
-    void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
-        printf("Client address: %s\n", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
-        /** We can use the connection handle here to ask for different connection parameters.
-         *  Args: connection handle, min connection interval, max connection interval
-         *  latency, supervision timeout.
-         *  Units; Min/Max Intervals: 1.25 millisecond increments.
-         *  Latency: number of intervals allowed to skip.
-         *  Timeout: 10 millisecond increments, try for 3x interval time for best results.  
-         */
-        pServer->updateConnParams(desc->conn_handle, 24, 48, 0, 120);
-    };
-    void onDisconnect(NimBLEServer* pServer) {
-        printf("Client disconnected - start advertising\n");
-        NimBLEDevice::startAdvertising();
-    };
-    
-/********************* Security handled here **********************
-****** Note: these are the same return values as defaults ********/
-    uint32_t onPassKeyRequest(){
-        printf("Server Passkey Request\n");
-        /** This should return a random 6 digit number for security 
-         *  or make your own static passkey as done here.
-         */
-        return 123456; 
-    };
+extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
+extern const uint8_t ulp_main_bin_end[]   asm("_binary_ulp_main_bin_end");
 
-    bool onConfirmPIN(uint32_t pass_key){
-        printf("The passkey YES/NO number: %d\n", pass_key);
-        /** Return false if passkeys don't match. */
-        return true; 
-    };
-
-    void onAuthenticationComplete(ble_gap_conn_desc* desc){
-        /** Check that encryption was successful, if not we disconnect the client */  
-        if(!desc->sec_state.encrypted) {
-            /** NOTE: createServer returns the current server reference unless one is not already created */
-            NimBLEDevice::createServer()->disconnect(desc->conn_handle);
-            printf("Encrypt connection failed - disconnecting client\n");
-            return;
-        }
-        printf("Starting BLE work!");
-    };
-};
-
-/** Handler class for characteristic actions */
-class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
-    void onRead(NimBLECharacteristic* pCharacteristic){
-        printf("%s : onRead(), value: %s\n", 
-                            pCharacteristic->getUUID().toString().c_str(),
-                            pCharacteristic->getValue().c_str());
-    };
-
-    void onWrite(NimBLECharacteristic* pCharacteristic) {
-        printf("%s : onWrite(), value: %s\n", 
-                            pCharacteristic->getUUID().toString().c_str(),
-                            pCharacteristic->getValue().c_str());
-    };
-    /** Called before notification or indication is sent, 
-     *  the value can be changed here before sending if desired.
-     */
-    void onNotify(NimBLECharacteristic* pCharacteristic) {
-        printf("Sending notification to clients\n");
-    };
-
-
-    /** The status returned in status is defined in NimBLECharacteristic.h.
-     *  The value returned in code is the NimBLE host return code.
-     */
-    void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {
-        printf("Notification/Indication status code: %d , return code: %d, %s\n",
-                            status,
-                            code,
-                            NimBLEUtils::returnCodeToString(code));
-    };
-};
-    
-/** Handler class for descriptor actions */    
-class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
-    void onWrite(NimBLEDescriptor* pDescriptor) {
-        std::string dscVal((char*)pDescriptor->getValue(), pDescriptor->getLength());
-        printf("Descriptor witten value: %s\n", dscVal.c_str());
-    };
-
-    void onRead(NimBLEDescriptor* pDescriptor) {
-        printf("%s Descriptor read\n", pDescriptor->getUUID().toString().c_str());
-    };;
-};
-
-
-/** Define callback instances globally to use for multiple Charateristics \ Descriptors */ 
-static DescriptorCallbacks dscCallbacks;
-static CharacteristicCallbacks chrCallbacks;
-
-void notifyTask(void * parameter){
-    for(;;) {
-        if(pServer->getConnectedCount()) {
-            NimBLEService* pSvc = pServer->getServiceByUUID("BAAD");
-            if(pSvc) {
-                NimBLECharacteristic* pChr = pSvc->getCharacteristic("F00D");
-                if(pChr) {
-                    pChr->notify(true);
-                }
-            }
-        }
-        vTaskDelay(2000/portTICK_PERIOD_MS);
-    }
-    
-    vTaskDelete(NULL);
+void ulp_deinit(){
+    gpio_num_t gpio_num = but1;
+    rtc_gpio_hold_dis(gpio_num);
+    rtc_gpio_deinit(gpio_num);    
 }
+
+void init_ulp_program(){
+    esp_err_t err = ulp_load_binary(0, ulp_main_bin_start,
+            (ulp_main_bin_end - ulp_main_bin_start) / sizeof(uint32_t));
+    ESP_ERROR_CHECK(err);
+
+    /* GPIO used for pulse counting. */
+    gpio_num_t gpio_num = but1;
+    int rtcio_num = rtc_io_number_get(gpio_num);
+    assert(rtc_gpio_is_valid_gpio(gpio_num) && "GPIO used for pulse counting must be an RTC IO");
+
+    /* Initialize some variables used by ULP program.
+     * Each 'ulp_xyz' variable corresponds to 'xyz' variable in the ULP program.
+     * These variables are declared in an auto generated header file,
+     * 'ulp_main.h', name of this file is defined in component.mk as ULP_APP_NAME.
+     * These variables are located in RTC_SLOW_MEM and can be accessed both by the
+     * ULP and the main CPUs.
+     *
+     * Note that the ULP reads only the lower 16 bits of these variables.
+     */
+    ulp_debounce_counter = 45;
+    ulp_debounce_max_count = 45;
+    ulp_next_edge = 0; // Constant value, but leaving the variable here 
+    ulp_io_number = rtcio_num; /* map from GPIO# to RTC_IO# */
+    //ulp_edge_count_to_wake_up = 1;
+
+    /* Initialize selected GPIO as RTC IO, enable input, disable pullup and pulldown */
+    rtc_gpio_init(gpio_num);
+    rtc_gpio_set_direction(gpio_num, RTC_GPIO_MODE_INPUT_ONLY);
+    rtc_gpio_pulldown_dis(gpio_num);
+    rtc_gpio_pullup_dis(gpio_num);
+    rtc_gpio_pullup_en(gpio_num); // I added this line, and this makes it work!
+    rtc_gpio_hold_en(gpio_num); // might try disabling this? Not sure why I'd want it to stay held. I guess this only works while it's running and not during deep sleep?
+
+    /* Disconnect GPIO12 and GPIO15 to remove current drain through
+     * pullup/pulldown resistors.
+     * GPIO12 may be pulled high to select flash voltage.
+     */
+    rtc_gpio_isolate(GPIO_NUM_12);
+    rtc_gpio_isolate(GPIO_NUM_15);
+    esp_deep_sleep_disable_rom_logging(); // suppress boot messages
+
+    /* Set ULP wake up period to T = 20ms. -> changed to 50ms
+     * Minimum pulse width has to be T * (ulp_debounce_counter + 1) = 80ms.
+     */
+    ulp_set_wakeup_period(0, 50000);
+
+    /* Start the program */
+    err = ulp_run(&ulp_entry - RTC_SLOW_MEM);
+    ESP_ERROR_CHECK(err);
+
+    ESP_ERROR_CHECK( esp_sleep_enable_ulp_wakeup() );
+
+    //go to sleep
+    esp_deep_sleep_start();
+
+}
+
 
 void app_main(void) {
-    printf("Starting NimBLE Server\n");
+    printf("Starting main\n");
+    // change pin modes if it woke up from ULP vs power up
+    esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
+    if (cause != ESP_SLEEP_WAKEUP_ULP) {
+        printf("Not ULP wakeup, initializing main prog\n");
+        vTaskDelay(150);
+        
+    } else {
+        printf("ULP wakeup, setting everything up...\n");
+        ulp_deinit();
+    }
 
-    /** sets device name */
-    NimBLEDevice::init("NimBLE");
+    BLEsetup();
 
-    /** Set the IO capabilities of the device, each option will trigger a different pairing method.
-     *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
-     *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
-     *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
-     */
-    //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); // use passkey
-    //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
 
-    /** 2 different ways to set security - both calls achieve the same result.
-     *  no bonding, no man in the middle protection, secure connections.
-     *   
-     *  These are the default values, only shown here for demonstration.   
-     */ 
-    //NimBLEDevice::setSecurityAuth(false, false, true); 
-    NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
+    std::string event;
+    ButtonsX but(true);
+    vTaskDelay(200);
 
-    pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(new ServerCallbacks());
 
-    NimBLEService* pDeadService = pServer->createService("DEAD");
-    NimBLECharacteristic* pBeefCharacteristic = pDeadService->createCharacteristic(
-                                               "BEEF",
-                                               NIMBLE_PROPERTY::READ |
-                                               NIMBLE_PROPERTY::WRITE |
-                               /** Require a secure connection for read and write access */
-                                               NIMBLE_PROPERTY::READ_ENC |  // only allow reading if paired / encrypted
-                                               NIMBLE_PROPERTY::WRITE_ENC   // only allow writing if paired / encrypted
-                                              );
-  
-    pBeefCharacteristic->setValue("Burger");
-    pBeefCharacteristic->setCallbacks(&chrCallbacks);
-
-    /** 2902 and 2904 descriptors are a special case, when createDescriptor is called with
-     *  either of those uuid's it will create the associated class with the correct properties
-     *  and sizes. However we must cast the returned reference to the correct type as the method
-     *  only returns a pointer to the base NimBLEDescriptor class.
-     */
-    NimBLE2904* pBeef2904 = (NimBLE2904*)pBeefCharacteristic->createDescriptor("2904"); 
-    pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
-    pBeef2904->setCallbacks(&dscCallbacks);
-  
-
-    NimBLEService* pBaadService = pServer->createService("BAAD");
-    NimBLECharacteristic* pFoodCharacteristic = pBaadService->createCharacteristic(
-                                               "F00D",
-                                               NIMBLE_PROPERTY::READ |
-                                               NIMBLE_PROPERTY::WRITE |
-                                               NIMBLE_PROPERTY::NOTIFY
-                                              );
-
-    pFoodCharacteristic->setValue("Fries");
-    pFoodCharacteristic->setCallbacks(&chrCallbacks);
-
-    /** Custom descriptor: Arguments are UUID, Properties, max length in bytes of the value */
-    NimBLEDescriptor* pC01Ddsc = pFoodCharacteristic->createDescriptor(
-                                               "C01D",
-                                               NIMBLE_PROPERTY::READ | 
-                                               NIMBLE_PROPERTY::WRITE|
-                                               NIMBLE_PROPERTY::WRITE_ENC, // only allow writing if paired / encrypted
-                                               20
-                                              );
-    pC01Ddsc->setValue("Send it back!");
-    pC01Ddsc->setCallbacks(&dscCallbacks);
-
-    /** Start the services when finished creating all Characteristics and Descriptors */  
-    pDeadService->start();
-    pBaadService->start();
-
-    NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-    /** Add the services to the advertisment data **/
-    pAdvertising->addServiceUUID(pDeadService->getUUID());
-    pAdvertising->addServiceUUID(pBaadService->getUUID());
-    /** If your device is battery powered you may consider setting scan response
-     *  to false as it will extend battery life at the expense of less data sent.
-     */
-    pAdvertising->setScanResponse(true);
-    pAdvertising->start();
-
-    printf("Advertising Started\n");
-    
-    xTaskCreate(notifyTask, "notifyTask", 5000, NULL, 1, NULL);
+    printf("Before main loop...\n");
+    for(;;){
+        event = but.getEvents();
+        
+        if (!(event.compare("") == 0)) 
+        {      
+            printf("%s", event.c_str());
+            if (event.compare(0,4,"LNNN",0,4) == 0)
+            {
+                //TODO: SHUTDOWN FUNCTION
+                printf("sleepy time\n");
+                init_ulp_program(); 
+            }
+            event = "";
+        }
+        vTaskDelay(20); 
+    }
 }
+    
