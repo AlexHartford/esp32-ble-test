@@ -4,8 +4,6 @@
 #include "debug.h"
 
 
-
-
 /* Based on Advanced HTTPS OTA example - 
    
 */
@@ -197,7 +195,7 @@ int setupOTA() {
 
     
    
-    BLEstop();
+    //BLEstop();
 
     return 0;
 }

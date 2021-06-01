@@ -3,5 +3,5 @@
 cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-set(SUPPORTED_TARGETS esp32)
-project(NimBLE_Server)
+#set(SUPPORTED_TARGETS esp32)
+project(esp32-ble-test)

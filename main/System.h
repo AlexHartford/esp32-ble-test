@@ -147,7 +147,6 @@ private:
     SemaphoreHandle_t modeMutex = xSemaphoreCreateMutex();
     SemaphoreHandle_t weightMutex = xSemaphoreCreateMutex();
     
- 
     Units eUnits;
     int batteryLevel;
 
@@ -156,7 +155,6 @@ private:
     
     WiFiStruct wifiInfo;
     
-
 };
 
 #endif

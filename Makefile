@@ -1,3 +1,3 @@
-PROJECT_NAME := NimBLE_Server
+PROJECT_NAME := esp32-ble-test
 
 include $(IDF_PATH)/make/project.mk
